@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Users {
+  id          String        @id @default(uuid())
+  name        String
+  login       String        @unique
+  password    String
+  files       Files[]
+  createdAt   DateTime      @default(now())
+  profilePic  String
+  FileActions FileActions[]
+  Points      Points[]
+  Comments    Comments[]
+  School      Schools       @relation(fields: [schoolsId], references: [id])
+  schoolsId   Int
+  Preferences Preferences[]
+}
+
+model Files {
+  id          String   @id @default(uuid())
+  title       String
+  coverUrl    String
+  isPublic    Boolean  @default(false)
+  description String
+  createdAt   DateTime @default(now())
+
+  user        Users         @relation(fields: [userId], references: [id])
+  userId      String
+  FileActions FileActions[]
+  Comments    Comments[]
+}
+
+model FileActions {
+  id      String    @id @default(uuid())
+  user    Users     @relation(fields: [userId], references: [id])
+  userId  String
+  file    Files     @relation(fields: [fileId], references: [id])
+  fileId  String
+  actions Actions[]
+}
+
+model Actions {
+  id            String      @id @default(uuid())
+  word          String
+  category      Categories  @relation(fields: [categoriesId], references: [id])
+  categoriesId  Int
+  FileActions   FileActions @relation(fields: [fileActionsId], references: [id])
+  fileActionsId String
+}
+
+model Categories {
+  id                 Int       @id @default(autoincrement())
+  category           String
+  description        String
+  resumedDescription String
+  color              String
+  Actions            Actions[]
+}
+
+model PointCategories {
+  id          Int      @id @default(autoincrement())
+  category    String
+  description String
+  value       Int
+  Points      Points[]
+}
+
+model Points {
+  id         String          @id @default(uuid())
+  user       Users           @relation(fields: [userId], references: [id])
+  userId     String
+  category   PointCategories @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  happenedAt DateTime        @default(now())
+}
+
+model Comments {
+  id         Int      @id @default(autoincrement())
+  user       Users    @relation(fields: [usersId], references: [id])
+  usersId    String
+  file       Files    @relation(fields: [filesId], references: [id])
+  filesId    String
+  content    String
+  happenedAt DateTime @default(now())
+}
+
+model Schools {
+  id    Int     @id @default(autoincrement())
+  name  String
+  Users Users[]
+}
+
+model Preferences {
+  id    Int     @id @default(autoincrement())
+  name  String
+  icon  String
+  Users Users[]
+}
