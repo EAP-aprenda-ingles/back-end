@@ -6,6 +6,7 @@ CREATE TABLE "Users" (
     "password" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "profilePic" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
     "schoolsId" INTEGER NOT NULL,
     CONSTRAINT "Users_schoolsId_fkey" FOREIGN KEY ("schoolsId") REFERENCES "Schools" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
@@ -85,5 +86,26 @@ CREATE TABLE "Schools" (
     "name" TEXT NOT NULL
 );
 
+-- CreateTable
+CREATE TABLE "Preferences" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    "icon" TEXT NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "_PreferencesToUsers" (
+    "A" INTEGER NOT NULL,
+    "B" TEXT NOT NULL,
+    CONSTRAINT "_PreferencesToUsers_A_fkey" FOREIGN KEY ("A") REFERENCES "Preferences" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "_PreferencesToUsers_B_fkey" FOREIGN KEY ("B") REFERENCES "Users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Users_login_key" ON "Users"("login");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "_PreferencesToUsers_AB_unique" ON "_PreferencesToUsers"("A", "B");
+
+-- CreateIndex
+CREATE INDEX "_PreferencesToUsers_B_index" ON "_PreferencesToUsers"("B");

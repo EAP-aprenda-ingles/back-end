@@ -4,6 +4,7 @@ import multipart from '@fastify/multipart'
 import 'dotenv/config'
 import fastify from 'fastify'
 import { resolve } from 'node:path'
+import { authRoutes } from './routes/authentication'
 import { preferencesRoutes } from './routes/preferences'
 import { schoolRoutes } from './routes/schools'
 import { uploadRoutes } from './routes/upload'
@@ -26,6 +27,7 @@ app.register(require('@fastify/static'), {
 app.register(schoolRoutes);
 app.register(preferencesRoutes);
 app.register(uploadRoutes);
+app.register(authRoutes)
 
 app.listen({
     port: 3333,

@@ -18,6 +18,7 @@ model Users {
   files       Files[]
   createdAt   DateTime      @default(now())
   profilePic  String
+  description String
   FileActions FileActions[]
   Points      Points[]
   Comments    Comments[]
