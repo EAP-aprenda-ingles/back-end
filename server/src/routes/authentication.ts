@@ -43,12 +43,14 @@ export async function authRoutes(app: FastifyInstance){
         if (!user) {
             const randomSalt = randomInt(10, 16)
             const passwordHash = await hash(password, randomSalt)
+            const parsedUrl = new URL(profilePic);
+            const pathWithoutDomain = parsedUrl.pathname;
             user = await prisma.users.create({
                 data: {
                     login,
                     name,
                     password: passwordHash,
-                    profilePic,
+                    profilePic: pathWithoutDomain,
                     description,
                     Preferences: {
                         connect: preferences.map(preferenceId => ({ id: preferenceId })),
@@ -63,12 +65,14 @@ export async function authRoutes(app: FastifyInstance){
             });
             
         }
+        const fullURL = request.protocol.concat('://').concat(request.hostname)
+        const fileURL = new URL(user.profilePic, fullURL).toString()
         const token = app.jwt.sign(
             {
                 name: user.name,
                 school: user.School.name,
                 createdAt: user.createdAt,
-                profilePic: user.profilePic,
+                profilePic: fileURL,
                 preferences: user.Preferences,
                 description: user.description
             },
@@ -104,13 +108,16 @@ export async function authRoutes(app: FastifyInstance){
 
             const isValidPassword = await compare(password, user.password)
             if (isValidPassword) {
+                const fullURL = request.protocol.concat('://').concat(request.hostname)
+                const fileURL = new URL(user.profilePic, fullURL).toString()
                 const token = app.jwt.sign(
                     {
                         name: user.name,
                         school: user.School.name,
                         createdAt: user.createdAt,
-                        profilePic: user.profilePic,
-                        preferences: user.Preferences
+                        profilePic: fileURL,
+                        preferences: user.Preferences,
+                        description: user.description
                     },
                     {
                         sub: user.id,
