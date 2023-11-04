@@ -8,6 +8,7 @@ CREATE TABLE "Users" (
     "profilePic" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "schoolsId" INTEGER NOT NULL,
+    "isPublic" BOOLEAN NOT NULL DEFAULT true,
     CONSTRAINT "Users_schoolsId_fkey" FOREIGN KEY ("schoolsId") REFERENCES "Schools" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 

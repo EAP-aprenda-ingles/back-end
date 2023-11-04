@@ -27,7 +27,7 @@ app.register(require('@fastify/static'), {
 app.register(schoolRoutes);
 app.register(preferencesRoutes);
 app.register(uploadRoutes);
-app.register(authRoutes)
+app.register(authRoutes);
 
 app.listen({
     port: 3333,

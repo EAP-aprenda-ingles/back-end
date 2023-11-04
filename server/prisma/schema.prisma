@@ -25,6 +25,7 @@ model Users {
   School      Schools       @relation(fields: [schoolsId], references: [id])
   schoolsId   Int
   Preferences Preferences[]
+  isPublic    Boolean       @default(true)
 }
 
 model Files {

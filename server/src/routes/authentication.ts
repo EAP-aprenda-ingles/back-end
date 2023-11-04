@@ -24,10 +24,11 @@ export async function authRoutes(app: FastifyInstance){
             }),
             profilePic: z.string({
                 required_error: "O campo 'imagem de perfil' é obrigatório!",
-            })
+            }),
+            isPublic: z.coerce.boolean().default(true)
         })
 
-        const { name, login, password, preferences, profilePic, description, school } = bodySchema.parse(request.body)
+        const { name, login, password, preferences, profilePic, description, school, isPublic } = bodySchema.parse(request.body)
 
         let user = await prisma.users.findUnique({
             where: {
@@ -52,7 +53,8 @@ export async function authRoutes(app: FastifyInstance){
                     Preferences: {
                         connect: preferences.map(preferenceId => ({ id: preferenceId })),
                     },
-                    schoolsId: school
+                    schoolsId: school,
+                    isPublic
                 },
                 include: {
                     Preferences: true,
