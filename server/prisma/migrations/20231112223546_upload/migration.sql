@@ -17,11 +17,13 @@ CREATE TABLE "Files" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "title" TEXT NOT NULL,
     "coverUrl" TEXT NOT NULL,
-    "isPublic" BOOLEAN NOT NULL DEFAULT false,
     "description" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "userId" TEXT NOT NULL,
-    CONSTRAINT "Files_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    "categoriesId" INTEGER NOT NULL,
+    "articleCover" TEXT NOT NULL,
+    CONSTRAINT "Files_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Files_categoriesId_fkey" FOREIGN KEY ("categoriesId") REFERENCES "Categories" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
