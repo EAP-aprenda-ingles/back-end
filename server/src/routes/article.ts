@@ -5,24 +5,17 @@ import { z } from 'zod';
 import axios from 'axios';
 import { prisma } from '../lib/prisma';
 
-export async function filesRoutes(app: FastifyInstance) {
+export async function articlesRoutes(app: FastifyInstance) {
   app.addHook('preHandler', async (request) => {
     await request.jwtVerify()
   })
 
-  app.get('/files', async (request) => {
+  app.get('/article', async (request) => {
     const { sub: userId } = request.user
 
     const files = await prisma.files.findMany({
-        where: {
-            OR: [
-              {
-                userId,
-              },
-              {
-                isPublic: true,
-              },
-            ],
+      where: {
+          userId,
           },
       orderBy: {
         createdAt: 'desc',
@@ -46,13 +39,12 @@ export async function filesRoutes(app: FastifyInstance) {
         author: file.user,
         description: file.description,
         title: file.title,
-        isPublic: file.isPublic
       }
     })
   })
 
-  app.get('/files/:id', async (request, reply) => {
-    const { sub: userId } = request.user
+  app.get('/article/:id', async (request, reply) => {
+    const { sub: userId } = request.user;
 
     const paramsSchema = z.object({
       id: z.string().uuid(),
@@ -93,7 +85,7 @@ export async function filesRoutes(app: FastifyInstance) {
       }
     })
 
-    if (!file.isPublic && file.userId !== userId) {
+    if (file.userId !== userId) {
       return reply.status(401).send()
     }
 
@@ -145,7 +137,6 @@ export async function filesRoutes(app: FastifyInstance) {
             id: file.user.id,
           },
           createdAt: file.createdAt,
-          isPublic: file.isPublic,
           actions: words,
         },
         categories: {
@@ -159,25 +150,27 @@ export async function filesRoutes(app: FastifyInstance) {
     return file
   })
 
-  app.post('/files', async (request) => {
+  app.post('/article', async (request) => {
     const { sub: userId } = request.user
 
     const bodySchema = z.object({
       title: z.string(),
       description: z.string(),
       coverUrl: z.string(),
-      isPublic: z.coerce.boolean().default(false),
+      articleCover: z.string(),
+      category: z.number()
     })
 
-    const { coverUrl, isPublic, title, description } = bodySchema.parse(request.body)
+    const { coverUrl, title, description, articleCover, category } = bodySchema.parse(request.body)
 
     const file = await prisma.files.create({
       data: {
         description,
         coverUrl,
-        isPublic,
         userId,
-        title
+        title,
+        articleCover,
+        categoriesId: category
       },
     })
 
@@ -202,10 +195,9 @@ export async function filesRoutes(app: FastifyInstance) {
 //     const bodySchema = z.object({
 //       content: z.string(),
 //       coverUrl: z.string(),
-//       isPublic: z.coerce.boolean().default(false),
 //     })
 
-//     const { content, coverUrl, isPublic } = bodySchema.parse(request.body)
+//     const { content, coverUrl } = bodySchema.parse(request.body)
 
 //     let memory = await prisma.memory.findUniqueOrThrow({
 //       where: {
@@ -224,14 +216,13 @@ export async function filesRoutes(app: FastifyInstance) {
 //       data: {
 //         content,
 //         coverUrl,
-//         isPublic,
 //       },
 //     })
 
 //     return memory
 //   })
 
-  app.delete('/files/:id', async (request, reply) => {
+  app.delete('/article/:id', async (request, reply) => {
     const { sub: userId } = request.user
 
     const paramsSchema = z.object({
