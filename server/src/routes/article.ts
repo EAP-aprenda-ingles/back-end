@@ -12,11 +12,23 @@ export async function articlesRoutes(app: FastifyInstance) {
 
   app.get('/article', async (request) => {
     const { sub: userId } = request.user
+    let userCategoriesIds: number[] = []
+    const userCategories = await prisma.users.findUnique({
+      where: {
+        id: userId
+      },
+      select: {
+        Preferences: {
+          select: {
+            id: true
+          }
+        }
+      }
+    })
+
+    userCategories?.Preferences.forEach((preference) => userCategoriesIds.push(preference.id))
 
     const files = await prisma.files.findMany({
-      where: {
-          userId,
-          },
       orderBy: {
         createdAt: 'desc',
       },
@@ -26,12 +38,60 @@ export async function articlesRoutes(app: FastifyInstance) {
             id: true,
             name: true,
             createdAt: true,
+            profilePic: true,
+            School: {
+              select: {
+                name: true,
+                id: true
+              }
+            }
+          }
+        }, Comments: {
+          select: {
+            id: true
+          },
+        }, Likes: {
+          select: {
+            userId: true
           }
         }
       }
     })
 
-    return files.map((file) => {
+    let userFeed: ({
+      Comments: {
+          id: number;
+      }[];
+      Likes: {
+          userId: string;
+      }[];
+      user: {
+        id: string;
+        name: string;
+        createdAt: Date;
+        profilePic: string;
+        School: {
+            id: number;
+            name: string;
+        };
+    };
+  } & {
+      id: string;
+      title: string;
+      coverUrl: string;
+      description: string;
+      createdAt: Date;
+      userId: string;
+      categoriesId: number;
+      articleCover: string;
+  })[] = [];
+    userFeed = files.filter((file) => userCategoriesIds.includes(file.categoriesId))
+
+    return userFeed.map((file) => {
+      const likedByUser = file.Likes.some((like) => like.userId === userId);
+      const fullURL = request.protocol.concat('://').concat(request.hostname)
+      const fileURL = new URL(file.user.profilePic, fullURL).toString()
+      file.user.profilePic = fileURL
       return {
         id: file.id,
         coverUrl: file.coverUrl,
@@ -39,6 +99,12 @@ export async function articlesRoutes(app: FastifyInstance) {
         author: file.user,
         description: file.description,
         title: file.title,
+        category: file.categoriesId,
+        articleCover: file.articleCover,
+        likes: file.Likes.length,
+        comments: file.Comments.length,
+        likedByUser,
+        fullComments: file.Comments
       }
     })
   })

@@ -26,6 +26,7 @@ model Users {
   schoolsId   Int
   Preferences Preferences[]
   isPublic    Boolean       @default(true)
+  Likes       Likes[]
 }
 
 model Files {
@@ -41,6 +42,7 @@ model Files {
   category     Categories    @relation(fields: [categoriesId], references: [id])
   categoriesId Int
   articleCover String
+  Likes        Likes[]
 }
 
 model FileActions {
@@ -109,4 +111,12 @@ model Preferences {
   name  String
   icon  String
   Users Users[]
+}
+
+model Likes {
+  id     Int    @id @default(autoincrement())
+  user   Users  @relation(fields: [userId], references: [id])
+  userId String
+  Post   Files  @relation(fields: [postId], references: [id])
+  postId String
 }
