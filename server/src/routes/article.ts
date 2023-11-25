@@ -54,6 +54,11 @@ export async function articlesRoutes(app: FastifyInstance) {
           select: {
             userId: true
           }
+        },
+        FileActions: {
+          select: {
+            userId: true
+          }
         }
       }
     })
@@ -65,6 +70,9 @@ export async function articlesRoutes(app: FastifyInstance) {
       Likes: {
           userId: string;
       }[];
+      FileActions: {
+        userId: string;
+    }[];
       user: {
         id: string;
         name: string;
@@ -92,6 +100,7 @@ export async function articlesRoutes(app: FastifyInstance) {
       const fullURL = request.protocol.concat('://').concat(request.hostname)
       const fileURL = new URL(file.user.profilePic, fullURL).toString()
       file.user.profilePic = fileURL
+      let interactions = new Set(file.FileActions)
       return {
         id: file.id,
         coverUrl: file.coverUrl,
@@ -104,7 +113,8 @@ export async function articlesRoutes(app: FastifyInstance) {
         likes: file.Likes.length,
         comments: file.Comments.length,
         likedByUser,
-        fullComments: file.Comments
+        fullComments: file.Comments,
+        interactions: interactions.size
       }
     })
   })
