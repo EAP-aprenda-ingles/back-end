@@ -27,6 +27,8 @@ model Users {
   Preferences Preferences[]
   isPublic    Boolean       @default(true)
   Likes       Likes[]
+  Followers   Followers[]   @relation("UserFollower")
+  Following   Followers[]
 }
 
 model Files {
@@ -119,4 +121,12 @@ model Likes {
   userId String
   Post   Files  @relation(fields: [postId], references: [id])
   postId String
+}
+
+model Followers {
+  id         Int    @id @default(autoincrement())
+  follower   Users  @relation("UserFollower", fields: [followerId], references: [id])
+  followerId String
+  user       Users  @relation(fields: [userId], references: [id])
+  userId     String
 }

@@ -9,6 +9,7 @@ import { authRoutes } from './routes/authentication'
 import { preferencesRoutes } from './routes/preferences'
 import { schoolRoutes } from './routes/schools'
 import { uploadRoutes } from './routes/upload'
+import { userRoutes } from './routes/users'
 
 const app = fastify()
 
@@ -29,7 +30,8 @@ app.register(schoolRoutes);
 app.register(preferencesRoutes);
 app.register(uploadRoutes);
 app.register(authRoutes);
-app.register(articlesRoutes)
+app.register(articlesRoutes);
+app.register(userRoutes);
 
 app.listen({
     port: 3333,
