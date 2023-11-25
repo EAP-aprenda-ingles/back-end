@@ -70,11 +70,8 @@ export async function authRoutes(app: FastifyInstance){
         const token = app.jwt.sign(
             {
                 name: user.name,
-                school: user.School.name,
                 createdAt: user.createdAt,
                 profilePic: fileURL,
-                preferences: user.Preferences,
-                description: user.description
             },
             {
                 sub: user.id,
@@ -113,11 +110,8 @@ export async function authRoutes(app: FastifyInstance){
                 const token = app.jwt.sign(
                     {
                         name: user.name,
-                        school: user.School.name,
                         createdAt: user.createdAt,
                         profilePic: fileURL,
-                        preferences: user.Preferences,
-                        description: user.description
                     },
                     {
                         sub: user.id,
