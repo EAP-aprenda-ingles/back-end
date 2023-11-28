@@ -119,6 +119,100 @@ export async function articlesRoutes(app: FastifyInstance) {
     })
   })
 
+  app.get('/article/page/:articleId', async (request) => {
+    const { sub: userId } = request.user
+
+    const paramsSchema = z.object({
+      articleId: z.string().uuid(),
+    })
+
+    const { articleId } = paramsSchema.parse(request.params)
+
+    
+    const file = await prisma.files.findUniqueOrThrow({
+      where: {
+        id: articleId
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+            profilePic: true,
+            School: {
+              select: {
+                name: true,
+                id: true
+              }
+            }
+          }
+        }, Comments: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profilePic: true
+              }
+            },
+            content: true
+          },
+        }, Likes: {
+          select: {
+            userId: true
+          }
+        },
+        FileActions: {
+          select: {
+            userId: true
+          }
+        }
+      }
+    })
+    
+    const likedByUser = file.Likes.some((like) => like.userId === userId);
+    const fullURL = request.protocol.concat('://').concat(request.hostname)
+    const fileURL = new URL(file.user.profilePic, fullURL).toString()
+
+    let interactions = new Set(file.FileActions)
+
+    return {
+        id: file.id,
+        coverUrl: file.coverUrl,
+        createdAt: file.createdAt,
+        author: {
+          id: file.user.id,
+          name: file.user.name,
+          profilePic: fileURL,
+          createdAt: file.user.createdAt,
+          School: file.user.School
+        },
+        description: file.description,
+        title: file.title,
+        category: file.categoriesId,
+        articleCover: file.articleCover,
+        likes: file.Likes.length,
+        comments: file.Comments.length,
+        likedByUser,
+        fullComments: file.Comments.map(comment => { 
+          const fullURL = request.protocol.concat('://').concat(request.hostname);
+          const fileURL = new URL(comment.user.profilePic, fullURL).toString();
+          return {
+            id: comment.id,
+            user: {
+              id: comment.user.id,
+              name: comment.user.name,
+              profilePic: fileURL
+            },
+            content: comment.content
+          };
+        }),
+        interactions: interactions.size
+    }
+  })
+
   app.get('/article/:id', async (request, reply) => {
     const { sub: userId } = request.user;
 
@@ -224,6 +318,67 @@ export async function articlesRoutes(app: FastifyInstance) {
     
 
     return file
+  })
+
+  app.get('/article/resumed/:id', async (request, reply) => {
+    const { sub: userId } = request.user;
+
+    const paramsSchema = z.object({
+      id: z.string().uuid(),
+    })
+
+    const { id } = paramsSchema.parse(request.params)
+
+    const file = await prisma.files.findUniqueOrThrow({
+      where: {
+        id,
+      }, include: {
+        user: {
+          select: {
+            name: true,
+            profilePic: true,
+            id: true
+          },
+        },
+        Comments: {
+          select: {
+            content: true,
+            happenedAt: true,
+            id: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profilePic: true,
+                createdAt: true
+              }
+            }
+          }
+        },
+        category: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    })
+    
+      const objectToReturn = {
+        id: file.id,
+        description: file.description,
+        title: file.title,
+        coverUrl: file.coverUrl,
+        user: {
+          name: file.user.name,
+          profilePic: file.user.profilePic,
+          id: file.user.id,
+        },
+        createdAt: file.createdAt,
+        comments: file.Comments,
+        category: file.category
+      };
+      return objectToReturn;
   })
 
   app.post('/article', async (request) => {

@@ -41,7 +41,7 @@ model Files {
   userId       String
   FileActions  FileActions[]
   Comments     Comments[]
-  category     Categories    @relation(fields: [categoriesId], references: [id])
+  category     Preferences   @relation(fields: [categoriesId], references: [id])
   categoriesId Int
   articleCover String
   Likes        Likes[]
@@ -72,7 +72,6 @@ model Categories {
   resumedDescription String
   color              String
   Actions            Actions[]
-  Files              Files[]
 }
 
 model PointCategories {
@@ -113,6 +112,7 @@ model Preferences {
   name  String
   icon  String
   Users Users[]
+  Files Files[]
 }
 
 model Likes {
