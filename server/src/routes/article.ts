@@ -230,8 +230,13 @@ export async function articlesRoutes(app: FastifyInstance) {
           select: {
             name: true,
             profilePic: true,
-            id: true
-          },
+            id: true,
+            School: {
+              select: {
+                name: true
+              }
+            }
+          }
         },
         FileActions: {
           where: {
@@ -251,14 +256,15 @@ export async function articlesRoutes(app: FastifyInstance) {
               }, 
             }
           }
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          }
         }
       }
     })
-
-    if (file.userId !== userId) {
-      return reply.status(401).send()
-    }
-
 
     const pdfPath = file.coverUrl;
 
@@ -288,12 +294,15 @@ export async function articlesRoutes(app: FastifyInstance) {
 
     if (paragraphs) {
       let words: { word: string; category: { id: number; category: string; color: string; }; }[] = []
-      const actions = file.FileActions.forEach((fileAction) => {
+      file.FileActions.forEach((fileAction) => {
         return fileAction.actions.map((actions) => {
           words.push(actions)
         });
       });
     
+      const fullURL = request.protocol.concat('://').concat(request.hostname)
+      const fileURL = new URL(file.user.profilePic, fullURL).toString()
+      file.user.profilePic = fileURL
       const objectToReturn = {
         fileData: {
           id: file.id,
@@ -305,9 +314,11 @@ export async function articlesRoutes(app: FastifyInstance) {
             name: file.user.name,
             profilePic: file.user.profilePic,
             id: file.user.id,
+            school: file.user.School.name
           },
           createdAt: file.createdAt,
           actions: words,
+          category: file.category
         },
         categories: {
           categories,
