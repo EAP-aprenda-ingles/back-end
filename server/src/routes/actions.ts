@@ -1,24 +1,29 @@
+import { PrismaClient } from '@prisma/client';
 import { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { prisma } from "../lib/prisma";
+
+const prisma = new PrismaClient();
+
+interface Word {
+    word: string;
+    category: {
+        id: number;
+    };
+}
 
 export async function actionsRoutes(app: FastifyInstance) {
     app.addHook('preHandler', async (request) => {
-        await request.jwtVerify()
-    })
+        await request.jwtVerify();
+    });
 
     app.post('/actions', async (request, reply) => {
         const { sub: userId } = request.user;
-        console.log(request.body)
-        
+        console.log(request.body);
+
         const wordsSchema = z.object({
             word: z.string(),
             category: z.object({
-                category: z.string(),
-                color: z.string(),
-                id: z.number(),
-                resumedDescription: z.string(),
-                description: z.string()
+                id: z.number()
             })
         });
 
@@ -26,116 +31,86 @@ export async function actionsRoutes(app: FastifyInstance) {
             fileId: z.string().uuid(),
             words: z.array(wordsSchema)
         });
-        console.log(request.params)
+
         const { fileId, words } = paramsSchema.parse(request.body);
 
-        const hasFileActions = await prisma.fileActions.findFirst({
+        let existingFileActions = await prisma.fileActions.findFirst({
             where: {
-              AND: [
-                {
-                    userId
-                }, {
-                    fileId
-                }
-              ] 
+                userId,
+                fileId
             },
-          });
-
-          if (!hasFileActions) {
-            const fa = await prisma.fileActions.create({
+            include: {
+                actions: true
+            }
+        });
+    
+        if (!existingFileActions) {
+            existingFileActions = await prisma.fileActions.create({
                 data: {
                     fileId,
                     userId
+                },
+                include: {
+                    actions: true
                 }
-            })
-
-            words.forEach(async (word) => {
-                await prisma.actions.create({
-                    data: {
-                        word: word.word,
-                        categoriesId: word.category.id,
-                        fileActionsId: fa.id
-                    }
-                })
-            })
-
+            });
             await prisma.points.create({
                 data: {
                     categoryId: 1,
                     userId
                 }
-            })
-          } else {
-            words.forEach(async (word) => {
-                await prisma.actions.upsert({
-                    create: {
+            });
+            return {
+                id: existingFileActions.fileId,
+                actions: existingFileActions.actions
+            };
+        } else if (existingFileActions) {
+            const actionsInDB = existingFileActions.actions;
+            const actionsToCreate = words.filter(newWord => !actionsInDB.some(action => action.word === newWord.word));
+            const actionsToUpdate = words.filter(newWord => actionsInDB.some(action => action.word === newWord.word));
+            const actionsToDelete = actionsInDB.filter(action => !words.some(word => word.word === action.word));
+
+            const createActionsPromises = actionsToCreate.map((word: any) => 
+                prisma.actions.create({
+                    data: {
                         word: word.word,
                         categoriesId: word.category.id,
-                        fileActionsId: hasFileActions.id,
-                    }, update: {
-                        // categoriesId: word.category.id,
-                    }, where: {
-                        id: hasFileActions.id,
-                        AND: [
-                            {
-                                fileActionsId: hasFileActions.id,
-                            }, {
-                                word: word.word
-                            }
-                        ]
+                        fileActionsId: existingFileActions.id 
                     }
-    
                 })
-            })
-          }
+            );
 
-          const actionsByUser = await prisma.fileActions.findFirst({
-            where: {
-                userId,
-                fileId
-            }, include: {
-                actions: {
-                    select: {
-                        category: true,
-                        FileActions: true,
-                        id: true,
-                        word: true
-                    }
-                }, file: {
-                    select: {
-                        coverUrl: true,
-                        description: true,
-                        title: true,
-                        createdAt: true,
-                        user: {
-                            select: {
-                                name: true,
-                                profilePic: true,
-                                id: true
-                            }
-                        }
-                    }
+            const createdActions = await Promise.all(createActionsPromises);
+            
+
+            const updatedActions = await Promise.all(actionsToUpdate.map(async word => {
+                const existingAction = actionsInDB.find(action => action.word === word.word);
+                if (existingAction) {
+                    return prisma.actions.update({
+                        where: { id: existingAction.id },
+                        data: { categoriesId: word.category.id }
+                    });
                 }
-            }
-        })
-//         id: string;
-//     file: string[];
-//     description: string;
-//     title: string;
-//     coverUrl: string;
-//     user: {
-//         name: string;
-//         profilePic: string;
-//         id: string;
-//     };
-//     createdAt: Date;
-//     isPublic: boolean;
-//     actions: word_type[];
-// }
-        return {
-            id: actionsByUser?.fileId,
+            }));
 
+            const deletedActions = await prisma.actions.deleteMany({
+                where: { id: { in: actionsToDelete.map(action => action.id) } }
+            });
+
+            const updatedFileActions = await prisma.fileActions.findFirst({
+                where: {
+                    userId,
+                    fileId
+                },
+                include: {
+                    actions: true
+                }
+            });
+
+            return {
+                id: updatedFileActions?.fileId,
+                actions: updatedFileActions?.actions || []
+            };
         }
     });
-    
 }
