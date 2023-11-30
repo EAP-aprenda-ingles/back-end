@@ -4,6 +4,7 @@ import multipart from '@fastify/multipart'
 import 'dotenv/config'
 import fastify from 'fastify'
 import { resolve } from 'node:path'
+import { actionsRoutes } from './routes/actions'
 import { articlesRoutes } from './routes/article'
 import { authRoutes } from './routes/authentication'
 import { commentsRoutes } from './routes/comments'
@@ -38,6 +39,7 @@ app.register(userRoutes);
 app.register(followRoutes);
 app.register(likesRoutes);
 app.register(commentsRoutes);
+app.register(actionsRoutes);
 
 app.listen({
     port: 3333,
