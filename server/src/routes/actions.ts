@@ -13,8 +13,8 @@ interface Word {
 
 export async function actionsRoutes(app: FastifyInstance) {
     app.addHook('preHandler', async (request) => {
-        await request.jwtVerify();
-    });
+        await request.jwtVerify()
+   })
 
     app.post('/actions', async (request, reply) => {
         const { sub: userId } = request.user;

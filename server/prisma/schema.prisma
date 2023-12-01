@@ -11,24 +11,28 @@ datasource db {
 }
 
 model Users {
-  id          String        @id @default(uuid())
-  name        String
-  login       String        @unique
-  password    String
-  files       Files[]
-  createdAt   DateTime      @default(now())
-  profilePic  String
-  description String
-  FileActions FileActions[]
-  Points      Points[]
-  Comments    Comments[]
-  School      Schools       @relation(fields: [schoolsId], references: [id])
-  schoolsId   Int
-  Preferences Preferences[]
-  isPublic    Boolean       @default(true)
-  Likes       Likes[]
-  Followers   Followers[]   @relation("UserFollower")
-  Following   Followers[]
+  id                String           @id @default(uuid())
+  name              String
+  login             String           @unique
+  password          String
+  files             Files[]
+  createdAt         DateTime         @default(now())
+  profilePic        String
+  description       String
+  FileActions       FileActions[]
+  Points            Points[]
+  Comments          Comments[]
+  School            Schools          @relation(fields: [schoolsId], references: [id])
+  schoolsId         Int
+  Preferences       Preferences[]
+  isPublic          Boolean          @default(true)
+  Likes             Likes[]
+  Followers         Followers[]      @relation("UserFollower")
+  Following         Followers[]
+  saveOnFeed        saveOnFeed[]
+  FollowRequests    FollowRequests[]
+  RequestedToFollow FollowRequests[] @relation("requestedToFollow")
+  Notifications     Notifications[]
 }
 
 model Files {
@@ -45,6 +49,7 @@ model Files {
   categoriesId Int
   articleCover String
   Likes        Likes[]
+  saveOnFeed   saveOnFeed[]
 }
 
 model FileActions {
@@ -129,4 +134,33 @@ model Followers {
   followerId String
   user       Users  @relation(fields: [userId], references: [id])
   userId     String
+}
+
+model saveOnFeed {
+  id         Int      @id @default(autoincrement())
+  user       Users    @relation(fields: [userId], references: [id])
+  userId     String
+  file       Files    @relation(fields: [fileId], references: [id])
+  fileId     String
+  happenedAt DateTime @default(now())
+}
+
+model FollowRequests {
+  id         Int      @id @default(autoincrement())
+  user       Users    @relation(fields: [userId], references: [id])
+  userId     String
+  follower   Users    @relation("requestedToFollow", fields: [followerId], references: [id])
+  followerId String
+  accepted   Boolean  @default(false)
+  happenedAt DateTime @default(now())
+}
+
+model Notifications {
+  id         Int       @id @default(autoincrement())
+  user       Users     @relation(fields: [userId], references: [id])
+  userId     String
+  type       String
+  content    String
+  happenedAt DateTime  @default(now())
+  deletedAt  DateTime?
 }

@@ -76,6 +76,24 @@ export async function userRoutes(app: FastifyInstance) {
                         id: true
                     }
                 },
+                isPublic: true,
+                saveOnFeed: {
+                    select: {
+                        file: {
+                            select: {
+                                id: true,
+                                articleCover: true,
+                                user: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                        profilePic: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 id: true,
                 Preferences: true,
                 profilePic: true,
@@ -87,8 +105,23 @@ export async function userRoutes(app: FastifyInstance) {
         })
         const followedByUser = user.Followers.some((follower) => follower.userId === userId);
         const fullURL = request.protocol.concat('://').concat(request.hostname)
-      const fileURL = new URL(user.profilePic, fullURL).toString()
-      user.profilePic = fileURL
+        const fileURL = new URL(user.profilePic, fullURL).toString()
+        user.profilePic = fileURL
+        // if (!user.isPublic && !followedByUser && user.id !== userId) {
+        //     return reply.status(401).send("Você não tem permissão para acessar este perfil!")
+        // }
+        const savedPosts = user.saveOnFeed.map((item) => {
+            const fileURL = new URL(item.file.articleCover, fullURL).toString()
+            return {
+                id: item.file.id,
+                articleCover: fileURL,
+                user: {
+                    id: item.file.user.id,
+                    name: item.file.user.name,
+                    profilePic: item.file.user.profilePic
+                }
+            }
+        })
         return {
             id: user.id,
             preferences: user.Preferences,
@@ -99,9 +132,12 @@ export async function userRoutes(app: FastifyInstance) {
             articles: user.files,
             school: user.School,
             description: user.description,
-            followedByUser
+            isPublic: user.isPublic,
+            followedByUser,
+            savedPosts
         }
-    })
+    });
+
     app.get('/users/community', async (request, reply) => {
         const { sub: userId } = request.user;
         const user = await prisma.users.findUniqueOrThrow({

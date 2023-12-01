@@ -48,12 +48,42 @@ export async function likesRoutes(app: FastifyInstance) {
               }
           })
     } else {
-        await prisma.likes.create({
+      await prisma.likes.create({
+        data: {
+          userId,
+          postId,
+        }
+      })
+
+      const post = await prisma.files.findUniqueOrThrow({
+        where: {
+          id: postId
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true
+            },
+            },
+        },
+      })
+
+      const user = await prisma.users.findUniqueOrThrow({
+        where: {
+          id: userId
+        }
+      })
+
+      if (userId !== post.user.id) {
+        await prisma.notifications.create({
           data: {
-            userId,
-            postId
-          },
+            userId: post.user.id,
+            content: `${user.name} curtiu seu artigo`,
+            type: 'like'
+          }
         })
+      }
     }
     const post = await prisma.files.findUniqueOrThrow({
         where: {

@@ -64,8 +64,35 @@ export async function commentsRoutes(app: FastifyInstance) {
           content,
           filesId: articleId,
           usersId: userId
+        }, select: {
+          file: {
+            select: {
+              user: {
+                select: {
+                  name: true,
+                  id: true,
+                }
+              }
+            }
+          }
         }
       })
+
+      const user = await prisma.users.findUniqueOrThrow({
+        where: {
+          id: userId
+        }
+      })
+
+      if (userId !== comment.file.user.id) {
+        await prisma.notifications.create({
+          data: {
+            userId: comment.file.user.id,
+            content: `${user.name} comentou em seu artigo`,
+            type: 'comment'
+          }
+        })
+      }
 
       if (comment) {
         const comments = await prisma.comments.findMany({

@@ -9,8 +9,11 @@ import { articlesRoutes } from './routes/article'
 import { authRoutes } from './routes/authentication'
 import { commentsRoutes } from './routes/comments'
 import { followRoutes } from './routes/follow'
+import { followRequestsRoutes } from './routes/followRequests'
 import { likesRoutes } from './routes/likes'
+import { notificationRoutes } from './routes/notifications'
 import { preferencesRoutes } from './routes/preferences'
+import { saveOnFeedRoutes } from './routes/saveOnFeed'
 import { schoolRoutes } from './routes/schools'
 import { uploadRoutes } from './routes/upload'
 import { userRoutes } from './routes/users'
@@ -40,6 +43,9 @@ app.register(followRoutes);
 app.register(likesRoutes);
 app.register(commentsRoutes);
 app.register(actionsRoutes);
+app.register(saveOnFeedRoutes);
+app.register(followRequestsRoutes);
+app.register(notificationRoutes);
 
 app.listen({
     port: 3333,
