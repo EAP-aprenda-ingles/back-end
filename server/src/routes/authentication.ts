@@ -122,6 +122,8 @@ export async function authRoutes(app: FastifyInstance){
             } else {
                 reply.status(401).send('Login ou senha informados incorretamente')
             }
+          } else {
+            reply.status(401).send('Login ou senha informados incorretamente')
           }
     })
 }
