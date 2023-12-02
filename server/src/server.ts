@@ -7,6 +7,7 @@ import { resolve } from 'node:path'
 import { actionsRoutes } from './routes/actions'
 import { articlesRoutes } from './routes/article'
 import { authRoutes } from './routes/authentication'
+import { backgroundsRoutes } from './routes/background'
 import { commentsRoutes } from './routes/comments'
 import { followRoutes } from './routes/follow'
 import { followRequestsRoutes } from './routes/followRequests'
@@ -48,6 +49,7 @@ app.register(saveOnFeedRoutes);
 app.register(followRequestsRoutes);
 app.register(notificationRoutes);
 app.register(searchRoutes);
+app.register(backgroundsRoutes);
 
 app.listen({
     port: 3333,
