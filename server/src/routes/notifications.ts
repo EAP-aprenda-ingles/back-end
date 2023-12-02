@@ -13,6 +13,10 @@ export async function notificationRoutes(app: FastifyInstance) {
          const notifications = await prisma.notifications.findMany({
               where: {
                 userId,
+                deletedAt: null
+              },
+              orderBy: {
+                happenedAt: 'desc'
               }
          })
     

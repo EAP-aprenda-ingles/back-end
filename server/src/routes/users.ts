@@ -110,31 +110,48 @@ export async function userRoutes(app: FastifyInstance) {
         // if (!user.isPublic && !followedByUser && user.id !== userId) {
         //     return reply.status(401).send("Você não tem permissão para acessar este perfil!")
         // }
-        const savedPosts = user.saveOnFeed.map((item) => {
-            const fileURL = new URL(item.file.articleCover, fullURL).toString()
-            return {
-                id: item.file.id,
-                articleCover: fileURL,
-                user: {
-                    id: item.file.user.id,
-                    name: item.file.user.name,
-                    profilePic: item.file.user.profilePic
+        if (user.isPublic || followedByUser || user.id === userId) {
+            const savedPosts = user.saveOnFeed.map((item) => {
+                const fileURL = new URL(item.file.articleCover, fullURL).toString()
+                return {
+                    id: item.file.id,
+                    articleCover: fileURL,
+                    user: {
+                        id: item.file.user.id,
+                        name: item.file.user.name,
+                        profilePic: item.file.user.profilePic
+                    }
                 }
+            })
+            return {
+                id: user.id,
+                preferences: user.Preferences,
+                profilePic: user.profilePic,
+                followers: user.Followers.length,
+                following: user.Following.length,
+                name: user.name,
+                articles: user.files,
+                school: user.School,
+                description: user.description,
+                isPublic: user.isPublic,
+                followedByUser,
+                savedPosts
             }
-        })
-        return {
-            id: user.id,
-            preferences: user.Preferences,
-            profilePic: user.profilePic,
-            followers: user.Followers.length,
-            following: user.Following.length,
-            name: user.name,
-            articles: user.files,
-            school: user.School,
-            description: user.description,
-            isPublic: user.isPublic,
-            followedByUser,
-            savedPosts
+        } else {
+            return {
+                id: user.id,
+                preferences: user.Preferences,
+                profilePic: user.profilePic,
+                followers: user.Followers.length,
+                following: user.Following.length,
+                name: user.name,
+                school: user.School,
+                description: user.description,
+                isPublic: user.isPublic,
+                articles: [],
+                savedPosts: [],
+                followedByUser
+            }
         }
     });
 

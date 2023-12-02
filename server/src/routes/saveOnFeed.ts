@@ -47,7 +47,8 @@ export async function saveOnFeedRoutes(app: FastifyInstance) {
                             }
                         },
                     }
-                }
+                },
+                id: true
             }
         });
 
@@ -58,17 +59,36 @@ export async function saveOnFeedRoutes(app: FastifyInstance) {
                 }
             })
         } else {
-            await prisma.saveOnFeed.create({
+            const newSave = await prisma.saveOnFeed.create({
                 data: {
                     userId,
                     fileId
                 },
+                select: {
+                    file: {
+                        select: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    name: true
+                                }
+                            },
+                        }
+                    },
+                    id: true,
+                    user: {
+                        select: {
+                            name: true,
+                            id: true
+                        }
+                    }
+                }
             })
 
             await prisma.notifications.create({
                 data: {
-                    userId: saveOnFeedExists.file.user.id,
-                    content: `${saveOnFeedExists.file.user.name} salvou seu artigo no feed`,
+                    userId: newSave.file.user.id,
+                    content: `${newSave.user.name} salvou seu artigo no feed`,
                     type: 'saveOnFeed'
                 }
             })

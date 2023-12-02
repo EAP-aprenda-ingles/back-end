@@ -146,21 +146,24 @@ model saveOnFeed {
 }
 
 model FollowRequests {
-  id         Int      @id @default(autoincrement())
-  user       Users    @relation(fields: [userId], references: [id])
-  userId     String
-  follower   Users    @relation("requestedToFollow", fields: [followerId], references: [id])
-  followerId String
-  accepted   Boolean  @default(false)
-  happenedAt DateTime @default(now())
+  id            Int             @id @default(autoincrement())
+  user          Users           @relation(fields: [userId], references: [id])
+  userId        String
+  follower      Users           @relation("requestedToFollow", fields: [followerId], references: [id])
+  followerId    String
+  accepted      Boolean         @default(false)
+  happenedAt    DateTime        @default(now())
+  Notifications Notifications[]
 }
 
 model Notifications {
-  id         Int       @id @default(autoincrement())
-  user       Users     @relation(fields: [userId], references: [id])
-  userId     String
-  type       String
-  content    String
-  happenedAt DateTime  @default(now())
-  deletedAt  DateTime?
+  id          Int             @id @default(autoincrement())
+  user        Users           @relation(fields: [userId], references: [id])
+  userId      String
+  type        String
+  content     String
+  happenedAt  DateTime        @default(now())
+  followReqId Int?
+  followReq   FollowRequests? @relation(fields: [followReqId], references: [id])
+  deletedAt   DateTime?
 }

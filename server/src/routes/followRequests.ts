@@ -6,17 +6,12 @@ const prisma = new PrismaClient();
 
 export async function followRequestsRoutes(app: FastifyInstance) {
     app.addHook('preHandler', async (request: FastifyRequest) => {
-        try {
-            await request.jwtVerify();
-        } catch (error) {
-            app.log.error(error);
-            throw new Error("Authentication failed");
-        }
+        await request.jwtVerify();
     });
 
     app.get('/followRequests', async (request, reply) => {
         try {
-            const { sub: userId } = request.user as { sub: string };
+            const { sub: userId } = request.user;
             const followRequests = await prisma.followRequests.findMany({
                 where: { userId },
             });
@@ -28,7 +23,7 @@ export async function followRequestsRoutes(app: FastifyInstance) {
 
     app.post('/followRequests', async (request, reply) => {
         try {
-            const { sub: userId } = request.user as { sub: string };
+            const { sub: userId } = request.user;
 
             const bodySchema = z.object({
                 followeeId: z.string().uuid(),
@@ -39,17 +34,32 @@ export async function followRequestsRoutes(app: FastifyInstance) {
             // Check if follow request exists
             const followRequestExists = await prisma.followRequests.findFirst({
                 where: { userId, followerId: followeeId },
-                select: { follower: { select: { id: true, name: true } } },
+                select: { follower: { select: { id: true, name: true } }, id: true },
             });
 
             // Create or delete follow request
             if (followRequestExists) {
                 await prisma.followRequests.delete({
-                    where: { id: followRequestExists.follower.id },
+                    where: { id: followRequestExists.id },
                 });
             } else {
-                await prisma.followRequests.create({
+                const newFollowRequest = await prisma.followRequests.create({
                     data: { userId, followerId: followeeId },
+                    select: {
+                        user: {
+                            select: { id: true, name: true },
+                        },
+                        id: true,
+                    }
+                });
+
+                await prisma.notifications.create({
+                    data: {
+                        userId: followeeId,
+                        content: `${newFollowRequest.user.name} deseja seguir você`,
+                        type: 'followRequest',
+                        followReqId: newFollowRequest.id,
+                    },
                 });
             }
 
@@ -74,32 +84,28 @@ export async function followRequestsRoutes(app: FastifyInstance) {
 
             const { requestId, notificationId } = bodySchema.parse(request.body);
 
-            // Update follow request to accepted
             const followRequest = await prisma.followRequests.update({
                 where: { id: requestId },
                 data: { accepted: true },
             });
 
-            // Create follower entry
             await prisma.followers.create({
-                data: { userId, followerId: followRequest.followerId },
+                data: { userId: followRequest.userId, followerId: userId },
             });
 
-            // Create notification for follow request accepted
             const user = await prisma.users.findUnique({
-                where: { id: followRequest.userId },
+                where: { id: followRequest.followerId },
                 select: { name: true },
             });
 
             await prisma.notifications.create({
                 data: {
-                    userId: followRequest.followerId,
+                    userId: followRequest.userId,
                     content: `${user?.name} aceitou seu pedido de seguir`,
                     type: 'followRequestAccepted',
                 },
             });
 
-            // Soft delete the notification
             await prisma.notifications.update({
                 where: { id: notificationId },
                 data: { deletedAt: new Date() },

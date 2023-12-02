@@ -15,6 +15,7 @@ import { notificationRoutes } from './routes/notifications'
 import { preferencesRoutes } from './routes/preferences'
 import { saveOnFeedRoutes } from './routes/saveOnFeed'
 import { schoolRoutes } from './routes/schools'
+import { searchRoutes } from './routes/search'
 import { uploadRoutes } from './routes/upload'
 import { userRoutes } from './routes/users'
 
@@ -46,6 +47,7 @@ app.register(actionsRoutes);
 app.register(saveOnFeedRoutes);
 app.register(followRequestsRoutes);
 app.register(notificationRoutes);
+app.register(searchRoutes);
 
 app.listen({
     port: 3333,
