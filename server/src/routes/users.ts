@@ -285,6 +285,64 @@ export async function userRoutes(app: FastifyInstance) {
         return { token }
     });
 
+    app.put('/login', async (request, reply) => {
+        const { sub: userId } = request.user
+        const bodySchema = z.object({
+            login: z.string({
+                required_error: "O campo 'e-mail' é obrigatório!",
+            }).email(),
+            password: z.string({
+                required_error: "O campo 'senha' é obrigatório!",
+            })
+        })
+        const { login, password } = bodySchema.parse(request.body)
+
+        let user = await prisma.users.findUniqueOrThrow({
+            where: {
+                login,
+                id: userId
+            }
+        })
+
+        if (user) {
+            const randomSalt = randomInt(10, 16)
+            const passwordHash = await hash(password, randomSalt)
+
+            await prisma.users.update({
+                where: {
+                    id: user.id
+                },
+                data: {
+                    password: passwordHash
+                }
+            })
+
+            const updatedUser = await prisma.users.findUniqueOrThrow({
+                where: {
+                    login,
+                }, select: {
+                    createdAt: true,
+                    profilePic: true,
+                    name: true
+                }
+            })
+            const fullURL = request.protocol.concat('://').concat(request.hostname)
+            const fileURL = new URL(updatedUser.profilePic, fullURL).toString()
+            const token = app.jwt.sign(
+                {
+                    name: updatedUser.name,
+                    createdAt: updatedUser.createdAt,
+                    profilePic: fileURL,
+                },
+                {
+                    sub: userId,
+                    expiresIn: '15 days'
+                }
+            )
+            return { token }
+        }
+    })
+
     app.delete('/users/:id', async (request, reply) => {
         const { sub: userId } = request.user
 

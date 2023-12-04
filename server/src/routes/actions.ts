@@ -24,7 +24,8 @@ export async function actionsRoutes(app: FastifyInstance) {
             word: z.string(),
             category: z.object({
                 id: z.number()
-            })
+            }),
+            line: z.number()
         });
 
         const paramsSchema = z.object({
@@ -66,51 +67,61 @@ export async function actionsRoutes(app: FastifyInstance) {
             };
         } else if (existingFileActions) {
             const actionsInDB = existingFileActions.actions;
-            const actionsToCreate = words.filter(newWord => !actionsInDB.some(action => action.word === newWord.word));
-            const actionsToUpdate = words.filter(newWord => actionsInDB.some(action => action.word === newWord.word));
-            const actionsToDelete = actionsInDB.filter(action => !words.some(word => word.word === action.word));
-
-            const createActionsPromises = actionsToCreate.map((word: any) => 
-                prisma.actions.create({
-                    data: {
-                        word: word.word,
-                        categoriesId: word.category.id,
-                        fileActionsId: existingFileActions.id 
-                    }
-                })
+            const actionsToCreate = words.filter(newWord =>
+              !actionsInDB.some(action => action.word === newWord.word && action.line === newWord.line)
             );
-
-            const createdActions = await Promise.all(createActionsPromises);
-            
-
-            const updatedActions = await Promise.all(actionsToUpdate.map(async word => {
-                const existingAction = actionsInDB.find(action => action.word === word.word);
-                if (existingAction) {
-                    return prisma.actions.update({
-                        where: { id: existingAction.id },
-                        data: { categoriesId: word.category.id }
-                    });
-                }
-            }));
-
-            const deletedActions = await prisma.actions.deleteMany({
-                where: { id: { in: actionsToDelete.map(action => action.id) } }
-            });
-
-            const updatedFileActions = await prisma.fileActions.findFirst({
-                where: {
-                    userId,
-                    fileId
+            const actionsToUpdate = words.filter(newWord =>
+              actionsInDB.some(action => action.word === newWord.word && action.line === newWord.line)
+            );
+            const actionsToDelete = actionsInDB.filter(action =>
+              !words.some(word => word.word === action.word && word.line === action.line)
+            );
+          
+            const createActionsPromises = actionsToCreate.map((word: any) =>
+              prisma.actions.create({
+                data: {
+                  word: word.word,
+                  categoriesId: word.category.id,
+                  fileActionsId: existingFileActions.id,
+                  line: word.line,
                 },
-                include: {
-                    actions: true
+              })
+            );
+          
+            await Promise.all(createActionsPromises);
+          
+            await Promise.all(
+              actionsToUpdate.map(async word => {
+                const existingAction = actionsInDB.find(
+                  action => action.word === word.word && action.line === word.line
+                );
+                if (existingAction) {
+                  return prisma.actions.update({
+                    where: { id: existingAction.id },
+                    data: { categoriesId: word.category.id },
+                  });
                 }
+              })
+            );
+          
+            await prisma.actions.deleteMany({
+              where: { id: { in: actionsToDelete.map(action => action.id) } },
             });
-
+          
+            const updatedFileActions = await prisma.fileActions.findFirst({
+              where: {
+                userId,
+                fileId,
+              },
+              include: {
+                actions: true,
+              },
+            });
+          
             return {
-                id: updatedFileActions?.fileId,
-                actions: updatedFileActions?.actions || []
+              id: updatedFileActions?.fileId,
+              actions: updatedFileActions?.actions || [],
             };
-        }
+          }
     });
 }

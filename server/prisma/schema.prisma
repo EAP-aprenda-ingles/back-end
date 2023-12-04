@@ -64,6 +64,7 @@ model FileActions {
 model Actions {
   id            String      @id @default(uuid())
   word          String
+  line          Int         @default(0)
   category      Categories  @relation(fields: [categoriesId], references: [id])
   categoriesId  Int
   FileActions   FileActions @relation(fields: [fileActionsId], references: [id])
