@@ -67,7 +67,7 @@ export async function followRequestsRoutes(app: FastifyInstance) {
                 where: { id: followeeId },
             });
 
-            return followee;
+            return {followee};
         } catch (error) {
             reply.status(500).send({ error: "Internal Server Error" });
         }
@@ -110,6 +110,11 @@ export async function followRequestsRoutes(app: FastifyInstance) {
                 where: { id: notificationId },
                 data: { deletedAt: new Date() },
             });
+
+            await prisma.followRequests.delete({
+                where: { id: requestId },
+            });
+            
 
             return followRequest;
         } catch (error) {

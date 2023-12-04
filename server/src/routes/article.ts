@@ -32,6 +32,24 @@ export async function articlesRoutes(app: FastifyInstance) {
       orderBy: {
         createdAt: 'desc',
       },
+      where: {
+        OR: [
+          {
+            user: {
+              isPublic: true
+            }
+          },
+          {
+            user: {
+              Following: {
+                some: {
+                  followerId: userId
+                }
+              }
+            }
+          }
+        ]
+      },
       include: {
         user: {
           select: {
