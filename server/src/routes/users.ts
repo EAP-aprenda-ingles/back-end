@@ -1,8 +1,8 @@
 import { hash } from "bcrypt";
 import { randomInt } from "crypto";
 import { FastifyInstance } from "fastify";
-import { unlink } from "fs";
-import { resolve } from "path";
+import fs from "fs";
+import path, { resolve } from "path";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 
@@ -22,10 +22,10 @@ export async function userRoutes(app: FastifyInstance) {
                 select: {
                     name: true,
                     id: true,
-                    Preferences: true,
                     profilePic: true,
                     description: true,
                     School: true,
+                    isPublic:true
                 },
                 where: {
                   id,
@@ -36,7 +36,7 @@ export async function userRoutes(app: FastifyInstance) {
             user.profilePic = fileURL
             return {
                 id: user.id,
-                preferences: user.Preferences,
+                isPublic: user.isPublic,
                 profilePic: user.profilePic,
                 name: user.name,
                 school: user.School,
@@ -183,6 +183,7 @@ export async function userRoutes(app: FastifyInstance) {
     })
     app.put('/users/:id', async (request, reply) => {
         const { sub: userId } = request.user
+        console.log(userId)
 
         const paramsSchema = z.object({
             id: z.string().uuid() 
@@ -191,66 +192,97 @@ export async function userRoutes(app: FastifyInstance) {
         const { id } = paramsSchema.parse(request.params)
 
         const bodySchema = z.object({
-            name: z.string(),
+            name: z.string().optional(),
             profilePic: z.string().optional(),
-            description: z.string(),
-            password: z.string(),
-            schoolId: z.number()
+            description: z.string().optional(),
+            schoolId: z.number().optional(),
+            isPublic: z.coerce.boolean().optional(),
+            preferences: z.array(z.number())
         })
 
-        const { name, profilePic, description, schoolId, password } = bodySchema.parse(request.body)
-
+        const { name, profilePic, description, schoolId, preferences, isPublic } = bodySchema.parse(request.body)
 
         let user = await prisma.users.findUniqueOrThrow({
             where: {
-              id,
+                id,
             }, include: {
                 School: true,
+                Preferences: true
             }
         })
 
-        
         if (userId !== id) {
             return reply.status(401).send()
         }
-        const randomSalt = randomInt(10, 16)
-        const passwordHash = await hash(password, randomSalt)
-        const profilePicName = user.profilePic.split('/')
-        const ppPath = resolve(__dirname, '../../uploads/profilePics/', profilePicName[profilePicName.length - 1])
-        unlink(ppPath, (err) => {
-            if (err) {
-              console.error(`Erro ao excluir o arquivo: ${err}`);
+
+        let newProfilePic = "";
+
+        const parsedUrl = new URL(profilePic ?? '');
+        const pathWithoutDomain = parsedUrl.pathname;
+        newProfilePic = pathWithoutDomain;
+
+        if (profilePic !== user.profilePic) {
+            const profilePicName = user.profilePic.split('/');
+            const ppPath = resolve(__dirname, '../../uploads/profilePics/', profilePicName[profilePicName.length - 1]);
+
+            if (fs.existsSync(ppPath)) {
+                fs.unlink(ppPath, (err) => {
+                    if (err) {
+                        console.error(`Erro ao excluir o arquivo: ${err}`);
+                    } else {
+                        console.log('Arquivo excluído com sucesso.');
+                    }
+                });
             } else {
-              console.log('Arquivo excluído com sucesso.');
-            }})
-        user = await prisma.users.update({
-            include: {
-                School: true
-            },
+                console.log('O arquivo não existe no caminho especificado.');
+            }
+        }
+
+
+        await prisma.users.update({
             where: {
                 id
             },
             data: {
                 name,
-                profilePic,
                 description,
-                password: passwordHash,
-                schoolsId: schoolId
+                isPublic,
+                Preferences: {
+                    disconnect: user.Preferences.map(preference => ({id: preference.id})) ,
+                    connect: preferences.map(preferenceId => ({ id: preferenceId }))
+                },
+                schoolsId: schoolId,
+                profilePic: newProfilePic
             }
         })
+
+        let updatedUser = await prisma.users.findUniqueOrThrow({
+            where: {
+                id
+            },
+            select: {
+                name: true,
+                createdAt: true,
+                profilePic: true,
+                id: true
+            }
+        })
+        
+
+        const fullURL = request.protocol.concat('://').concat(request.hostname)
+        const fileURL = new URL(updatedUser.profilePic, fullURL).toString()
         const token = app.jwt.sign(
             {
-                name: user.name,
-                className: user.School.name,
-                createdAt: user.createdAt,
-                profilePic: user.profilePic
+                name: updatedUser.name,
+                createdAt: updatedUser.createdAt,
+                profilePic: fileURL
             },
             {
-                sub: user.id,
+                sub: updatedUser.id,
                 expiresIn: '15 days'
             }
         )
-        return {token}
+        return { token }
     });
 
     app.delete('/users/:id', async (request, reply) => {
