@@ -65,7 +65,7 @@ export async function actionsRoutes(app: FastifyInstance) {
                 id: existingFileActions.fileId,
                 actions: existingFileActions.actions
             };
-        } else if (existingFileActions) {
+        } else {
             const actionsInDB = existingFileActions.actions;
             const actionsToCreate = words.filter(newWord =>
               !actionsInDB.some(action => action.word === newWord.word && action.line === newWord.line)
@@ -76,13 +76,14 @@ export async function actionsRoutes(app: FastifyInstance) {
             const actionsToDelete = actionsInDB.filter(action =>
               !words.some(word => word.word === action.word && word.line === action.line)
             );
+            
           
             const createActionsPromises = actionsToCreate.map((word: any) =>
               prisma.actions.create({
                 data: {
                   word: word.word,
                   categoriesId: word.category.id,
-                  fileActionsId: existingFileActions.id,
+                  fileActionsId: existingFileActions ? existingFileActions.id : '',
                   line: word.line,
                 },
               })

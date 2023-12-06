@@ -38,7 +38,7 @@ export async function commentsRoutes(app: FastifyInstance) {
           content: comment.content,
         }
       })
-    } catch (error) {
+    } catch (error: any) {
       reply.status(400).send({
         error: "Invalid articleId",
         message: error.message,
@@ -116,7 +116,7 @@ export async function commentsRoutes(app: FastifyInstance) {
       } else {
         reply.status(409).send('Impossible to create a comment')
       }
-    } catch (error) {
+    } catch (error: any) {
       reply.status(400).send({
         error: "Invalid articleId or content",
         message: error.message,
