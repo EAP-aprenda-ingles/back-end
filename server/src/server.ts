@@ -51,10 +51,13 @@ app.register(notificationRoutes);
 app.register(searchRoutes);
 app.register(backgroundsRoutes);
 
+// app.listen({
+//     port: 3333
+//   })
 app.listen({
-    port: 3333,
-    host: '0.0.0.0'
-  })
+  port: 3333,
+  host: '0.0.0.0'
+})
   .then(() => {
     console.log('running server on eapacademic.com.br:21148')
   })
