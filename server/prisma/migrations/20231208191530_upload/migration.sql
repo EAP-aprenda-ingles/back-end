@@ -23,7 +23,7 @@ CREATE TABLE "Files" (
     "categoriesId" INTEGER NOT NULL,
     "articleCover" TEXT NOT NULL,
     CONSTRAINT "Files_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "Files_categoriesId_fkey" FOREIGN KEY ("categoriesId") REFERENCES "Categories" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    CONSTRAINT "Files_categoriesId_fkey" FOREIGN KEY ("categoriesId") REFERENCES "Preferences" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -39,6 +39,7 @@ CREATE TABLE "FileActions" (
 CREATE TABLE "Actions" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "word" TEXT NOT NULL,
+    "line" INTEGER NOT NULL DEFAULT 0,
     "categoriesId" INTEGER NOT NULL,
     "fileActionsId" TEXT NOT NULL,
     CONSTRAINT "Actions_categoriesId_fkey" FOREIGN KEY ("categoriesId") REFERENCES "Categories" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -94,6 +95,58 @@ CREATE TABLE "Preferences" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "name" TEXT NOT NULL,
     "icon" TEXT NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "Likes" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "userId" TEXT NOT NULL,
+    "postId" TEXT NOT NULL,
+    CONSTRAINT "Likes_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Likes_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Files" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Followers" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "followerId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    CONSTRAINT "Followers_followerId_fkey" FOREIGN KEY ("followerId") REFERENCES "Users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Followers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "saveOnFeed" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "userId" TEXT NOT NULL,
+    "fileId" TEXT NOT NULL,
+    "happenedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "saveOnFeed_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "saveOnFeed_fileId_fkey" FOREIGN KEY ("fileId") REFERENCES "Files" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "FollowRequests" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "userId" TEXT NOT NULL,
+    "followerId" TEXT NOT NULL,
+    "accepted" BOOLEAN NOT NULL DEFAULT false,
+    "happenedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "FollowRequests_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "FollowRequests_followerId_fkey" FOREIGN KEY ("followerId") REFERENCES "Users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Notifications" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "happenedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "followReqId" INTEGER,
+    "deletedAt" DATETIME,
+    CONSTRAINT "Notifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Notifications_followReqId_fkey" FOREIGN KEY ("followReqId") REFERENCES "FollowRequests" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
