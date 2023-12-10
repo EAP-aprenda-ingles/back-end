@@ -350,6 +350,137 @@ export async function articlesRoutes(app: FastifyInstance) {
     return file
   })
 
+  app.get('/article/author/:id', async (request, reply) => {
+    const { sub: userId } = request.user;
+
+    const paramsSchema = z.object({
+      id: z.string().uuid(),
+    })
+
+    const { id } = paramsSchema.parse(request.params)
+
+    const resumedFile = await prisma.files.findUniqueOrThrow({
+      where: {
+        id
+      }, include: {
+        user: {
+          select: {
+            id: true
+          }
+        }
+      }
+    })
+
+    const file = await prisma.files.findUniqueOrThrow({
+      where: {
+        id,
+      }, include: {
+        user: {
+          select: {
+            name: true,
+            profilePic: true,
+            id: true,
+            School: {
+              select: {
+                name: true
+              }
+            }
+          }
+        },
+        FileActions: {
+          where: {
+            userId: resumedFile.user.id
+          }, 
+          select: {
+            actions: {
+              select: {
+                word: true,
+                category: {
+                  select: {
+                    id: true,
+                    color: true,
+                    category: true
+                  }
+                },
+                line: true
+              }, 
+            }
+          }
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
+    })
+
+    const pdfPath = file.coverUrl;
+
+    async function extractTextFromPDF(pdfPath: string) {
+      try {
+        const response = await axios.get(pdfPath, { responseType: 'arraybuffer' });
+        const data = await pdf(response.data);
+
+        const paragraphs = data.text.split('\n').filter(paragraph => paragraph.trim() !== '');
+        return paragraphs
+      } catch (error) {
+        console.error('Erro ao extrair texto do PDF:', error);
+      }
+    }
+    
+    let paragraphs = await extractTextFromPDF(pdfPath);
+
+    const categories = await prisma.categories.findMany({
+      select: {
+        id: true,
+        category: true,
+        color: true,
+        description: true,
+        resumedDescription: true
+      }
+    });
+
+    if (paragraphs) {
+      let words: { word: string; category: { id: number; category: string; color: string; }; line: number }[] = []
+      file.FileActions.forEach((fileAction) => {
+        return fileAction.actions.map((actions) => {
+          words.push(actions)
+        });
+      });
+    
+      const fullURL = request.protocol.concat('://').concat(request.hostname)
+      const fileURL = new URL(file.user.profilePic, fullURL).toString()
+      file.user.profilePic = fileURL
+      const objectToReturn = {
+        fileData: {
+          id: file.id,
+          file: paragraphs,
+          description: file.description,
+          title: file.title,
+          coverUrl: file.coverUrl,
+          user: {
+            name: file.user.name,
+            profilePic: file.user.profilePic,
+            id: file.user.id,
+            school: file.user.School.name
+          },
+          createdAt: file.createdAt,
+          actions: words,
+          category: file.category
+        },
+        categories: {
+          categories,
+        },
+      };
+      return objectToReturn;
+    }
+    
+
+    return file
+  })
+
   app.get('/article/resumed/:id', async (request, reply) => {
     const { sub: userId } = request.user;
 
