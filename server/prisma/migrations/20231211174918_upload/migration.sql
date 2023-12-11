@@ -40,6 +40,7 @@ CREATE TABLE "Actions" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "word" TEXT NOT NULL,
     "line" INTEGER NOT NULL DEFAULT 0,
+    "position" INTEGER NOT NULL DEFAULT 0,
     "categoriesId" INTEGER NOT NULL,
     "fileActionsId" TEXT NOT NULL,
     CONSTRAINT "Actions_categoriesId_fkey" FOREIGN KEY ("categoriesId") REFERENCES "Categories" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,

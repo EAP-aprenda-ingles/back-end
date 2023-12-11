@@ -271,7 +271,8 @@ export async function articlesRoutes(app: FastifyInstance) {
                     category: true
                   }
                 },
-                line: true
+                line: true,
+                position: true
               }, 
             }
           }
@@ -312,7 +313,7 @@ export async function articlesRoutes(app: FastifyInstance) {
     });
 
     if (paragraphs) {
-      let words: { word: string; category: { id: number; category: string; color: string; }; line: number }[] = []
+      let words: { word: string; category: { id: number; category: string; color: string; }; line: number, position: number }[] = []
       file.FileActions.forEach((fileAction) => {
         return fileAction.actions.map((actions) => {
           words.push(actions)
@@ -402,7 +403,8 @@ export async function articlesRoutes(app: FastifyInstance) {
                     category: true
                   }
                 },
-                line: true
+                line: true,
+                position: true
               }, 
             }
           }
@@ -443,7 +445,7 @@ export async function articlesRoutes(app: FastifyInstance) {
     });
 
     if (paragraphs) {
-      let words: { word: string; category: { id: number; category: string; color: string; }; line: number }[] = []
+      let words: { word: string; category: { id: number; category: string; color: string; }; line: number, position: number }[] = []
       file.FileActions.forEach((fileAction) => {
         return fileAction.actions.map((actions) => {
           words.push(actions)

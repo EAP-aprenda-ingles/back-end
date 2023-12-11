@@ -183,7 +183,6 @@ export async function userRoutes(app: FastifyInstance) {
     })
     app.put('/users/:id', async (request, reply) => {
         const { sub: userId } = request.user
-        console.log(userId)
 
         const paramsSchema = z.object({
             id: z.string().uuid() 

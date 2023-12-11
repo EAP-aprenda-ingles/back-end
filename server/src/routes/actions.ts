@@ -25,7 +25,8 @@ export async function actionsRoutes(app: FastifyInstance) {
             category: z.object({
                 id: z.number()
             }),
-            line: z.number()
+            line: z.number(),
+            position: z.number()
         });
 
         const paramsSchema = z.object({
@@ -68,13 +69,13 @@ export async function actionsRoutes(app: FastifyInstance) {
         } else {
             const actionsInDB = existingFileActions.actions;
             const actionsToCreate = words.filter(newWord =>
-              !actionsInDB.some(action => action.word === newWord.word && action.line === newWord.line)
+              !actionsInDB.some(action => action.word === newWord.word && action.line === newWord.line && action.position === newWord.position)
             );
             const actionsToUpdate = words.filter(newWord =>
-              actionsInDB.some(action => action.word === newWord.word && action.line === newWord.line)
+              actionsInDB.some(action => action.word === newWord.word && action.line === newWord.line && action.position === newWord.position)
             );
             const actionsToDelete = actionsInDB.filter(action =>
-              !words.some(word => word.word === action.word && word.line === action.line)
+              !words.some(word => word.word === action.word && word.line === action.line && action.position === action.position)
             );
             
           
@@ -85,6 +86,7 @@ export async function actionsRoutes(app: FastifyInstance) {
                   categoriesId: word.category.id,
                   fileActionsId: existingFileActions ? existingFileActions.id : '',
                   line: word.line,
+                  position: word.position
                 },
               })
             );
@@ -94,7 +96,7 @@ export async function actionsRoutes(app: FastifyInstance) {
             await Promise.all(
               actionsToUpdate.map(async word => {
                 const existingAction = actionsInDB.find(
-                  action => action.word === word.word && action.line === word.line
+                  action => action.word === word.word && action.line === word.line && action.position === word.position
                 );
                 if (existingAction) {
                   return prisma.actions.update({
