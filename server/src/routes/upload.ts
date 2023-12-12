@@ -33,7 +33,7 @@ export async function uploadRoutes(app: FastifyInstance) {
 
     await pump(upload.file, writeStream)
 
-    const fullURL = request.protocol.concat('://').concat(request.hostname)
+    const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
     const fileURL = new URL(`/uploads/files/${fileName}`, fullURL).toString()
 
     return { fileURL }
@@ -63,7 +63,7 @@ export async function uploadRoutes(app: FastifyInstance) {
 
     await pump(upload.file, writeStream)
 
-    const fullURL = request.protocol.concat('://').concat(request.hostname)
+    const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
     const fileURL = new URL(`/uploads/profilePics/${fileName}`, fullURL).toString()
 
     return { fileURL }
@@ -93,7 +93,7 @@ export async function uploadRoutes(app: FastifyInstance) {
 
     await pump(upload.file, writeStream)
 
-    const fullURL = request.protocol.concat('://').concat(request.hostname)
+    const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
     const fileURL = new URL(`/uploads/filesImages/${fileName}`, fullURL).toString()
 
     return { fileURL }

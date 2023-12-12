@@ -115,7 +115,7 @@ export async function articlesRoutes(app: FastifyInstance) {
 
     return userFeed.map((file) => {
       const likedByUser = file.Likes.some((like) => like.userId === userId);
-      const fullURL = request.protocol.concat('://').concat(request.hostname)
+      const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
       const fileURL = new URL(file.user.profilePic, fullURL).toString()
       file.user.profilePic = fileURL
       let interactions = new Set(file.FileActions)
@@ -191,7 +191,7 @@ export async function articlesRoutes(app: FastifyInstance) {
     })
     
     const likedByUser = file.Likes.some((like) => like.userId === userId);
-    const fullURL = request.protocol.concat('://').concat(request.hostname)
+    const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
     const fileURL = new URL(file.user.profilePic, fullURL).toString()
 
     let interactions = new Set(file.FileActions)
@@ -215,7 +215,7 @@ export async function articlesRoutes(app: FastifyInstance) {
         comments: file.Comments.length,
         likedByUser,
         fullComments: file.Comments.map(comment => { 
-          const fullURL = request.protocol.concat('://').concat(request.hostname);
+          const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '');
           const fileURL = new URL(comment.user.profilePic, fullURL).toString();
           return {
             id: comment.id,
@@ -320,7 +320,7 @@ export async function articlesRoutes(app: FastifyInstance) {
         });
       });
     
-      const fullURL = request.protocol.concat('://').concat(request.hostname)
+      const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
       const fileURL = new URL(file.user.profilePic, fullURL).toString()
       file.user.profilePic = fileURL
       const objectToReturn = {
@@ -452,7 +452,7 @@ export async function articlesRoutes(app: FastifyInstance) {
         });
       });
     
-      const fullURL = request.protocol.concat('://').concat(request.hostname)
+      const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
       const fileURL = new URL(file.user.profilePic, fullURL).toString()
       file.user.profilePic = fileURL
       const objectToReturn = {

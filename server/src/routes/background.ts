@@ -8,7 +8,7 @@ export async function backgroundsRoutes(app: FastifyInstance) {
         const files = fs.readdirSync(folderPath);
         const randomIndex = Math.floor(Math.random() * files.length);
         const randomImage = files[randomIndex];
-        const fullURL = request.protocol.concat('://').concat(request.hostname).concat('/uploads/backgroundImages/')
+        const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '').concat('/uploads/backgroundImages/')
         const fileURL = new URL(randomImage, fullURL).toString()
         
         return {backgroundImage: fileURL}

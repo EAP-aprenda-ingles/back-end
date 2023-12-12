@@ -34,7 +34,7 @@ export async function searchRoutes(app: FastifyInstance) {
         
         return users.map((user) => {
             const followedByUser = user.Followers.some((follower) => follower.userId === userId);
-            const fullURL = request.protocol.concat('://').concat(request.hostname)
+            const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
             const fileURL = new URL(user.profilePic, fullURL).toString()
             user.profilePic = fileURL
 
@@ -88,7 +88,7 @@ export async function searchRoutes(app: FastifyInstance) {
         
         return users.map((user) => {
             const followedByUser = user.user.Followers.some((follower) => follower.userId === userId);
-            const fullURL = request.protocol.concat('://').concat(request.hostname)
+            const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
             const fileURL = new URL(user.user.profilePic, fullURL).toString()
             user.user.profilePic = fileURL
 
@@ -142,7 +142,7 @@ export async function searchRoutes(app: FastifyInstance) {
         
         return users.map((user) => {
             const followedByUser = user.follower.Followers.some((follower) => follower.userId === userId);
-            const fullURL = request.protocol.concat('://').concat(request.hostname)
+            const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
             const fileURL = new URL(user.follower.profilePic, fullURL).toString()
             user.follower.profilePic = fileURL
 

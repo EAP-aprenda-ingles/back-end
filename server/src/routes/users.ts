@@ -31,7 +31,7 @@ export async function userRoutes(app: FastifyInstance) {
                   id,
                 }
             })
-            const fullURL = request.protocol.concat('://').concat(request.hostname)
+            const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
             const fileURL = new URL(user.profilePic, fullURL).toString()
             user.profilePic = fileURL
             return {
@@ -104,7 +104,7 @@ export async function userRoutes(app: FastifyInstance) {
             }
         })
         const followedByUser = user.Followers.some((follower) => follower.userId === userId);
-        const fullURL = request.protocol.concat('://').concat(request.hostname)
+        const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
         const fileURL = new URL(user.profilePic, fullURL).toString()
         user.profilePic = fileURL
         // if (!user.isPublic && !followedByUser && user.id !== userId) {
@@ -268,7 +268,7 @@ export async function userRoutes(app: FastifyInstance) {
         })
         
 
-        const fullURL = request.protocol.concat('://').concat(request.hostname)
+        const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
         const fileURL = new URL(updatedUser.profilePic, fullURL).toString()
         const token = app.jwt.sign(
             {
@@ -325,7 +325,7 @@ export async function userRoutes(app: FastifyInstance) {
                     name: true
                 }
             })
-            const fullURL = request.protocol.concat('://').concat(request.hostname)
+            const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
             const fileURL = new URL(updatedUser.profilePic, fullURL).toString()
             const token = app.jwt.sign(
                 {

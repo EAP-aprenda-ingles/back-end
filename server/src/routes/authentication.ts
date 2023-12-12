@@ -65,7 +65,7 @@ export async function authRoutes(app: FastifyInstance){
             });
             
         }
-        const fullURL = request.protocol.concat('://').concat(request.hostname)
+        const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
         const fileURL = new URL(user.profilePic, fullURL).toString()
         const token = app.jwt.sign(
             {
@@ -105,7 +105,7 @@ export async function authRoutes(app: FastifyInstance){
 
             const isValidPassword = await compare(password, user.password)
             if (isValidPassword) {
-                const fullURL = request.protocol.concat('://').concat(request.hostname)
+                const fullURL = request.protocol.concat('://').concat(process.env.CURRENT_URL ?? '')
                 const fileURL = new URL(user.profilePic, fullURL).toString()
                 const token = app.jwt.sign(
                     {
